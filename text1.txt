@@ -1,1 +1,44 @@
-changes
+from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import JSONResponse
+import numpy as np
+import cv2
+
+from ai.object_detection import ObjectDetector
+
+app = FastAPI(title="ZIRA AI Backend")
+
+detector = ObjectDetector()
+
+
+@app.post("/detect")
+
+async def detect(file: UploadFile = File(...)):
+
+    image_bytes = await file.read()
+
+    image = cv2.imdecode(
+        np.frombuffer(image_bytes,np.uint8),
+        cv2.IMREAD_COLOR
+    )
+
+    if image is None:
+
+        return JSONResponse(
+
+            status_code=400,
+
+            content={"error":"Invalid Image"}
+
+        )
+
+    objects = detector.detect_objects(image)
+
+    return{
+
+        "project":"ZIRA AI",
+
+        "module":"Object Detection",
+
+        "objects":objects
+
+    }
